@@ -1,0 +1,71 @@
+DESIGN_NAME: top_chip
+
+VERILOG_FILES:
+  # Top / FFT
+  - dir::design/rtl/top_chip.v
+  - dir::design/rtl/fft32.v
+  - dir::design/rtl/fft8.v
+  - dir::design/rtl/fft4.v
+
+  # Datapath helpers
+  - dir::design/rtl/buffer_parallel2serial.v
+  - dir::design/rtl/clip_round.v
+  - dir::design/rtl/round.v
+  - dir::design/rtl/shift_r2.v
+  - dir::design/rtl/shift_r4.v
+
+  # MDC8P
+  - dir::design/rtl/fft_mdc_8p/fft_mdc_8p.v
+  - dir::design/rtl/fft_mdc_8p/ctrl_in/mdc8p_ctrl_in.v
+  - dir::design/rtl/fft_mdc_8p/ctrl_out/mdc8p_ctrl_out.v
+  - dir::design/rtl/fft_mdc_8p/stages/mdc8p_stage1.v
+  - dir::design/rtl/fft_mdc_8p/stages/mdc8p_stage2.v
+  - dir::design/rtl/fft_mdc_8p/stages/mdc8p_stage3.v
+
+  # Twiddles
+  - dir::design/rtl/twiddle_interface/twiddle_interface.v
+
+  # Common modules
+  - dir::design/rtl/common_modules/btfly_2.v
+  - dir::design/rtl/common_modules/btfly_4.v
+  - dir::design/rtl/common_modules/btfly_8.v
+  - dir::design/rtl/common_modules/complex_multiplier.v
+  - dir::design/rtl/common_modules/ds_switch.v
+  - dir::design/rtl/common_modules/rx_serializer.v
+  - dir::design/rtl/common_modules/tx_serializer.v
+  - dir::design/rtl/common_modules/xfft_cell.v
+  - dir::design/rtl/common_modules/signal_generator.v
+
+  # Debug / CDC / SPI
+  - dir::design/rtl/debug_unit/debug_system.v
+  - dir::design/rtl/debug_unit/debug_unit.v
+  - dir::design/rtl/debug_unit/cdc_snapshot.v   
+  - dir::design/rtl/debug_unit/spi_slave_mode0.v
+
+# Clock
+CLOCK_PORT: i_clk
+CLOCK_PERIOD: 50
+
+# SDC
+PNR_SDC_FILE: dir::librelane/constraints/top.sdc
+SIGNOFF_SDC_FILE: dir::librelane/constraints/top.sdc
+
+VSRC_LOC_FILES:
+  VPWR: dir::librelane/irdrop/vpwr.csv
+  VGND: dir::librelane/irdrop/vgnd.csv
+
+
+# Floorplan: die ~1.0 mm² (micrones)
+FP_SIZING: absolute
+# DIE_AREA: [0, 0, 1000, 1000]
+# CORE_AREA: [20, 20, 980, 980]
+
+DIE_AREA: [0, 0, 850, 850]
+#CORE_AREA: [20, 20, 830, 830]
+CORE_AREA: [20.16, 22.68, 829.92, 827.82]
+
+# DIE_AREA:  [0, 0, 860, 860]
+# CORE_AREA: [20, 20, 840, 840]
+
+ERROR_ON_LONG_WIRE: false
+WIRE_LENGTH_THRESHOLD: 1300
