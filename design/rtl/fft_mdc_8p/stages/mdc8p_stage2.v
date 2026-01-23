@@ -47,7 +47,7 @@ module mdc8p_stage2 #(
   wire signed [NB_OUTPUT - 1 : 0] w_pre_ds1_i;
   wire signed [NB_OUTPUT - 1 : 0] w_ds1_r;
   wire signed [NB_OUTPUT - 1 : 0] w_ds1_i;
-  wire                            w_dsx_valid;
+  //wire                            w_dsx_valid;
 
   //////////////////////////////////////////////////////////////////////////////////
   // FSM

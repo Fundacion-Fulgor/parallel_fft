@@ -48,9 +48,9 @@ generate
         1: begin : gen_round
             wire [NB_INP:0] data_plus_round;
 
-            if (BITS_DIS > 0) begin
+            if (BITS_DIS > 0) begin : gen_add_round
                 assign data_plus_round = {i_data[NB_INP-1], i_data} + (1'b1 << (BITS_DIS - 1));
-            end else begin
+            end else begin : gen_no_round
                 assign data_plus_round = {i_data[NB_INP-1], i_data};
             end
             assign w_rnd = (~|data_plus_round[NB_INP -: SIGNED+1] || &data_plus_round[NB_INP -: SIGNED+1]) ?

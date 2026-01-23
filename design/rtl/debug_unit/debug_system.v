@@ -11,7 +11,7 @@ module debug_system (
     input  [7:0] last_out_re,
     input  [7:0] last_out_im,
     input  [7:0] mid_data_re,
-    output [7:0] sys_config,
+    output [2:0] sys_config,
     output       miso
 );
 
@@ -19,6 +19,9 @@ wire [6:0]  addr_out;
 wire [7:0]  data_to_dut;
 wire        wr_en;
 wire [7:0]  data_from_dut;
+
+wire spi_done;
+wire [15:0] spi_rx_frame;
 
 spi_slave_mode0 #(
     .FRAME_BITS (16),
@@ -34,9 +37,11 @@ spi_slave_mode0 #(
     .data_out     (data_to_dut),
     .write_enable (wr_en),
     .data_in      (data_from_dut),
-    .done         (),
-    .rx_frame     ()
+    .done         (spi_done),
+    .rx_frame     (spi_rx_frame)
 );
+
+wire _unused_spi = spi_done ^ ^spi_rx_frame;
 
 debug_unit #(
     .NB_ADDR (7),

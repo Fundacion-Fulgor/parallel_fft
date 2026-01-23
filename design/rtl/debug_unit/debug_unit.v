@@ -20,7 +20,7 @@ module debug_unit #(
   input  wire [NB_DATA-1:0]   mid_data_re,
   // Control Outputs
 
-  output reg  [NB_DATA-1:0]   sys_config
+  output reg  [2:0] sys_config
 );
 
 // Address Map
@@ -99,12 +99,13 @@ cdc_snapshot #(.DATA_WIDTH(NB_DATA)) u_cdc_mid_data_re (
 
 always @(posedge clk or negedge rst_n) begin
   if (!rst_n) begin
-    sys_config <= {NB_DATA{1'b0}};
+    sys_config <= 3'b000;
   end
   else begin
     if (spi_wr_en) begin
       case (spi_addr)
-        ADDR_SYS_CONFIG: sys_config <= spi_wdata;
+        ADDR_SYS_CONFIG: sys_config <= spi_wdata[2:0];
+        default: ; // no write
       endcase
     end
   end
@@ -121,7 +122,7 @@ always @(*) begin
     ADDR_LAST_OUT_IM: spi_rdata = last_out_im_sync;
     ADDR_MID_DATA_RE: spi_rdata = mid_data_re_sync;
     // Controls (Readback)
-    ADDR_SYS_CONFIG: spi_rdata = sys_config;
+    ADDR_SYS_CONFIG: spi_rdata = {{(NB_DATA-3){1'b0}}, sys_config};
     default:      spi_rdata = {NB_DATA{1'b0}};
   endcase
 end

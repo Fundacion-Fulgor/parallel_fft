@@ -57,10 +57,10 @@ generate
             wire [NB_INP:0] data_plus_round_re;
             wire [NB_INP:0] data_plus_round_im;
 
-            if (BITS_DIS > 0) begin
+            if (BITS_DIS > 0) begin : gen_add_round
                 assign data_plus_round_re = {i_data_re[NB_INP-1], i_data_re} + (1'b1 << (BITS_DIS - 1));
                 assign data_plus_round_im = {i_data_im[NB_INP-1], i_data_im} + (1'b1 << (BITS_DIS - 1));
-            end else begin
+            end else begin : gen_no_round
                 assign data_plus_round_re = {i_data_re[NB_INP-1], i_data_re};
                 assign data_plus_round_im = {i_data_im[NB_INP-1], i_data_im};
             end

@@ -55,17 +55,29 @@ VSRC_LOC_FILES:
   VGND: dir::librelane/irdrop/vgnd.csv
 
 
-# Floorplan: die ~1.0 mm² (micrones)
+# Floorplan
 FP_SIZING: absolute
-# DIE_AREA: [0, 0, 1000, 1000]
-# CORE_AREA: [20, 20, 980, 980]
 
-DIE_AREA: [0, 0, 850, 850]
-#CORE_AREA: [20, 20, 830, 830]
-CORE_AREA: [20.16, 22.68, 829.92, 827.82]
+# Target utilization = 65%
 
-# DIE_AREA:  [0, 0, 860, 860]
-# CORE_AREA: [20, 20, 840, 840]
+
+# DIE_AREA: [0, 0, 880, 880]
+# CORE_AREA: [20.16, 22.68, 859.84, 857.32]
+
+# DIE_AREA:  [0, 0, 827, 827]
+# CORE_AREA: [20.16, 22.68, 806.84, 804.32]
+
+#90%
+# CORE_AREA: [20.16, 22.68, 736.88, 732.51]
+# DIE_AREA:  [0, 0, 757.04, 755.19]
+
+# ~85% target utilization 
+CORE_AREA: [20.16, 22.68, 754.09, 749.19]
+DIE_AREA:  [0, 0, 774.25, 771.87]
+
+
+PL_TARGET_DENSITY: 0.78
+
 
 ERROR_ON_LONG_WIRE: false
 WIRE_LENGTH_THRESHOLD: 1300

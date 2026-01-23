@@ -76,7 +76,7 @@ module spi_slave_mode0 #(
         bit_cnt  <= {CNT_W{1'b0}};
       end else begin
         
-        next_rx  = {rx_shift[FRAME_BITS-2:0], mosi};
+        next_rx  <= {rx_shift[FRAME_BITS-2:0], mosi};
         rx_shift <= next_rx;
 
         

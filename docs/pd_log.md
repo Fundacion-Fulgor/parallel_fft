@@ -511,3 +511,72 @@ This confirms the VPWR/VGND source locations are being picked up correctly, sinc
 With an 850×850 µm die, a ~1235 µm net is entirely plausible (it can span the chip diagonally plus routing detours). This is not unusual.
 
 **Solution:** set `WIRE_LENGTH_THRESHOLD: 1300`
+
+
+----
+
+
+# Run RUN_2026-01-21_11-40-52
+
+
+The final DEF file confirms unambiguously that **all floorplan dimensions are in micrometers (µm)**.
+
+From `def/top_chip.def`:
+
+```
+UNITS DISTANCE MICRONS 1000 ;
+DIEAREA ( 0 0 ) ( 880000 880000 ) ;
+```
+
+Interpretation:
+- `1000 DBU = 1 µm`
+- `880000 DBU / 1000 = 880 µm`
+
+**Final die size:**  
+**880 µm × 880 µm = 0.7744 mm²**
+
+
+
+```yaml
+FP_SIZING: absolute
+
+DIE_AREA:  [0, 0, 880, 880]
+CORE_AREA: [20.16, 22.68, 859.84, 857.32]
+```
+
+### Core dimensions
+- Core width  = 839.68 µm
+- Core height = 834.64 µm
+
+### Core area
+- ≈ 700,800 µm²
+- ≈ 0.7008 mm²
+
+---
+
+![alt text](design__instance__utilization65.png)
+
+- **Core utilization:** 65.83%
+
+
+
+----
+
+# run `RUN_2026-01-22_16-15-21` (75%)
+
+DIE_AREA:  [0, 0, 827, 827]
+CORE_AREA: [20.16, 22.68, 806.84, 804.32]
+
+
+![alt text](<75%.png>)
+
+
+The final utilization reported is:
+
+
+
+![alt text](<util75%.png>)
+
+
+---
+

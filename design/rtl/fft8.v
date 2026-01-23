@@ -14,7 +14,9 @@ module fft8 #(
     parameter NB_INPUT   = 8,
     parameter NBF_INPUT  = 7,
     parameter NB_OUTPUT  = 8,
+    /* verilator lint_off UNUSEDPARAM */
     parameter NBF_OUTPUT = 7
+    /* verilator lint_on UNUSEDPARAM */
 ) (
     input                             i_clk,
     input                             i_rst,
@@ -49,11 +51,11 @@ module fft8 #(
   localparam NBF_STAGE3 = NBF_STAGE2;
 
 
-  wire [ NB_INPUT - 1 : 0] w_data0_r;
-  wire [ NB_INPUT - 1 : 0] w_data0_i;
-  wire [ NB_INPUT - 1 : 0] w_data1_r;
-  wire [ NB_INPUT - 1 : 0] w_data1_i;
-  wire                     w_valid;
+ // wire [ NB_INPUT - 1 : 0] w_data0_r;
+ // wire [ NB_INPUT - 1 : 0] w_data0_i;
+ // wire [ NB_INPUT - 1 : 0] w_data1_r;
+ // wire [ NB_INPUT - 1 : 0] w_data1_i;
+ // wire                     w_valid;
   //------------------------------------------------
   wire [NB_STAGE1 - 1 : 0] w_st1_1r;
   wire [NB_STAGE1 - 1 : 0] w_st1_1i;
@@ -67,10 +69,10 @@ module fft8 #(
   wire [NB_STAGE2 - 1 : 0] w_st2_2i;
   wire                     w_st2_valid;
   //------------------------------------------------
-  wire [NB_STAGE3 - 1 : 0] w_st3_1r;
-  wire [NB_STAGE3 - 1 : 0] w_st3_1i;
-  wire [NB_STAGE3 - 1 : 0] w_st3_2r;
-  wire [NB_STAGE3 - 1 : 0] w_st3_2i;
+//  wire [NB_STAGE3 - 1 : 0] w_st3_1r;
+//  wire [NB_STAGE3 - 1 : 0] w_st3_1i;
+//  wire [NB_STAGE3 - 1 : 0] w_st3_2r;
+//  wire [NB_STAGE3 - 1 : 0] w_st3_2i;
 
 
   ///////////////////////////////////////////////////////////////////////////////

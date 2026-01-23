@@ -9,7 +9,7 @@ module top_chip (
     output wire o_spi_miso
 );
 
-wire [7:0] sys_config;
+wire [2:0] sys_config;
 wire       internal_rst_n;
 wire       fft_enable;
 wire       fft_inverse;
