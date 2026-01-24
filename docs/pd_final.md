@@ -589,3 +589,8 @@ puts "Done: highlighted only IO nets (inputs vs outputs)."
 ![alt text](o_sip.png)
 
 ![alt text](o_serial.png)
+
+
+
+
+preguntar load recomendado (retardo + capacitor)

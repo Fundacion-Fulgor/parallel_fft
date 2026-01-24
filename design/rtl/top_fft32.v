@@ -1,16 +1,16 @@
-module top_chip (
+module top_fft32 (
     input  wire i_clk,      
     input  wire i_rst_n,    
-    input  wire i_serial_rx, 
-    output wire o_serial_tx, 
+    input  wire i_data, 
+    output wire o_data, 
     input  wire i_spi_ss_n,
-    input  wire i_spi_sclk,
+    //input  wire i_spi_sclk,
     input  wire i_spi_mosi,
     output wire o_spi_miso
 );
 
 wire [2:0] sys_config;
-wire       internal_rst_n;
+wire       rst_n;
 wire       fft_enable;
 wire       fft_inverse;
 wire       soft_reset;
@@ -28,12 +28,12 @@ assign fft_enable  = sys_config[0];
 assign fft_inverse = sys_config[1];
 assign soft_reset  = sys_config[2];
 
-assign internal_rst_n = i_rst_n & (~soft_reset);
+assign rst_n = i_rst_n & (~soft_reset);
 
 rx_serializer #( .NB_DATA(8) ) u_rx (
     .i_clk      (i_clk),
-    .i_rst_n    (internal_rst_n),
-    .i_data     (i_serial_rx),
+    .i_rst_n    (rst_n),
+    .i_data     (i_data),
     .o_data_re  (rx_data_re),
     .o_data_im  (rx_data_im),
     .o_valid    (rx_valid)
@@ -42,7 +42,7 @@ rx_serializer #( .NB_DATA(8) ) u_rx (
 fft32 #( .NB_DATA(8) ) u_fft_core (
     .i_clk          (i_clk),
     .i_clk_en       (fft_enable),
-    .i_rst          (~internal_rst_n),
+    .i_rst          (~rst_n),
     .i_inverse      (fft_inverse),
     .i_valid        (rx_valid),
     .i_tx_ready     (tx_ready),
@@ -56,19 +56,19 @@ fft32 #( .NB_DATA(8) ) u_fft_core (
 
 tx_serializer #( .NB_DATA(8) ) u_tx (
     .i_clk      (i_clk),
-    .i_rst_n    (internal_rst_n),
+    .i_rst_n    (rst_n),
     .i_valid    (fft_out_valid),
     .i_data_re  (fft_out_re),
     .i_data_im  (fft_out_im),
-    .o_data     (o_serial_tx),
+    .o_data     (o_data),
     .o_ready    (tx_ready)
 );
 
 reg [7:0] cnt_inputs;
 reg [7:0] cnt_outputs;
 
-always @(posedge i_clk or negedge internal_rst_n) begin
-    if (!internal_rst_n) begin
+always @(posedge i_clk or negedge rst_n) begin
+    if (!rst_n) begin
         cnt_inputs  <= 0;
         cnt_outputs <= 0;
     end 
@@ -87,8 +87,8 @@ wire      is_clipped;
 
 assign is_clipped = (fft_out_re == 8'h7F) || (fft_out_re == 8'h80) || (fft_out_im == 8'h7F) || (fft_out_im == 8'h80);
 
-always @(posedge i_clk or negedge internal_rst_n) begin
-    if (!internal_rst_n) begin
+always @(posedge i_clk or negedge rst_n) begin
+    if (!rst_n) begin
         error_flags <= 0;
     end
     else if (fft_out_valid && is_clipped) begin
@@ -99,8 +99,8 @@ end
 reg [7:0] last_out_re;
 reg [7:0] last_out_im;
 
-always @(posedge i_clk or negedge internal_rst_n) begin
-    if (!internal_rst_n) begin
+always @(posedge i_clk or negedge rst_n) begin
+    if (!rst_n) begin
         last_out_re <= 0;
         last_out_im <= 0;
     end 
@@ -114,7 +114,7 @@ debug_system u_debug_sys (
     .clk            (i_clk),
     .rst_n          (i_rst_n),
     .ss_n           (i_spi_ss_n),
-    .sclk           (i_spi_sclk),
+    .sclk           (i_clk),
     .mosi           (i_spi_mosi),
     .miso           (o_spi_miso),
     .status_flags   (status_flags),

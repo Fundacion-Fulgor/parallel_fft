@@ -53,7 +53,6 @@ debug_unit #(
     .spi_wdata    (data_to_dut),
     .spi_wr_en    (wr_en),
     .spi_rdata    (data_from_dut),
-    .spi_ss_n     (ss_n),
     .status_flags (status_flags),
     .error_flags  (error_flags),
     .cnt_inputs   (cnt_inputs),

@@ -101,7 +101,7 @@ RTL_FILES=(
   # Debug / CDC / SPI (use THIS one)
   "design/rtl/debug_unit/debug_system.v"
   "design/rtl/debug_unit/debug_unit.v"
-  "design/rtl/debug_unit/cdc_snapshot.v"
+  #"design/rtl/debug_unit/cdc_snapshot.v"
   "design/rtl/debug_unit/spi_slave_mode0.v"
 )
 
