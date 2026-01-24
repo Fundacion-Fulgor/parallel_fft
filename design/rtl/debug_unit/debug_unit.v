@@ -6,7 +6,9 @@ module debug_unit #(
   input  wire                 rst_n,
   // SPI Slave Interface
   input  wire [NB_ADDR-1:0]   spi_addr,
+  /* verilator lint_off UNUSEDSIGNAL */
   input  wire [NB_DATA-1:0]   spi_wdata,
+  /* verilator lint_on UNUSEDSIGNAL */
   input  wire                 spi_wr_en,
   input  wire                 spi_ss_n,
   output reg  [NB_DATA-1:0]   spi_rdata,
@@ -103,10 +105,12 @@ always @(posedge clk or negedge rst_n) begin
   end
   else begin
     if (spi_wr_en) begin
+      /* verilator lint_off UNUSEDSIGNAL */
       case (spi_addr)
         ADDR_SYS_CONFIG: sys_config <= spi_wdata[2:0];
-        default: ; // no write
+        default:         sys_config <= sys_config;
       endcase
+      /* verilator lint_on UNUSEDSIGNAL */
     end
   end
 end

@@ -61,8 +61,8 @@ FP_SIZING: absolute
 # Target utilization = 65%
 
 
-# DIE_AREA: [0, 0, 880, 880]
-# CORE_AREA: [20.16, 22.68, 859.84, 857.32]
+DIE_AREA: [0, 0, 880, 880]
+CORE_AREA: [20.16, 22.68, 859.84, 857.32]
 
 # DIE_AREA:  [0, 0, 827, 827]
 # CORE_AREA: [20.16, 22.68, 806.84, 804.32]
@@ -72,11 +72,11 @@ FP_SIZING: absolute
 # DIE_AREA:  [0, 0, 757.04, 755.19]
 
 # ~85% target utilization 
-CORE_AREA: [20.16, 22.68, 754.09, 749.19]
-DIE_AREA:  [0, 0, 774.25, 771.87]
+# CORE_AREA: [20.16, 22.68, 754.09, 749.19]
+# DIE_AREA:  [0, 0, 774.25, 771.87]
 
 
-PL_TARGET_DENSITY: 0.78
+# PL_TARGET_DENSITY: 0.78
 
 
 ERROR_ON_LONG_WIRE: false
