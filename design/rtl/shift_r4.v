@@ -33,6 +33,8 @@ reg [NB_DATA*25-1:0] data_re_q;
 reg [NB_DATA*25-1:0] data_im_q;
 reg [        25-1:0] valid_q;
 
+integer k;
+
 always @(posedge i_clk) begin
     if(i_clk_en) begin
         data_re_q[   NB_DATA-1:0      ] <= i_data_re;
@@ -41,7 +43,7 @@ always @(posedge i_clk) begin
         // data_im_q[25*NB_DATA-1:NB_DATA] <= data_im_q[24*NB_DATA-1:0];
         valid_q  [   0]                 <= i_valid;
         // valid_q  [24:1]                 <= valid_q[23:0];
-        for (int k = 1; k < 25; k = k + 1) begin
+        for (k = 1; k < 25; k = k + 1) begin
             data_re_q[k*NB_DATA +: NB_DATA] <= data_re_q[(k-1)*NB_DATA +: NB_DATA];
             data_im_q[k*NB_DATA +: NB_DATA] <= data_im_q[(k-1)*NB_DATA +: NB_DATA];
             valid_q[k]                      <= valid_q[k-1];

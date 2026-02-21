@@ -5,8 +5,8 @@
 //
 // ----------------------------------------------------------------------------------------------------------------------------
 // Revision History:
-//      Date:         2026-01-10
-//      Author:       A. Lema
+//      Date:         2026-01-15
+//      Author:       A. Lema, F. Villar
 //      Organization: Fundación Fulgor
 // ----------------------------------------------------------------------------------------------------------------------------
 
@@ -19,12 +19,14 @@ module fft32 #(
     input                       i_inverse,
     ///////////////////// INPUTS  /////////////////////
     input                       i_valid,
+    input                       i_tx_ready,
     input  signed [NB_DATA-1:0] i_data_re,
     input  signed [NB_DATA-1:0] i_data_im,
     ///////////////////// OUTPUTS /////////////////////
     output                      o_valid,
     output signed [NB_DATA-1:0] o_data_re,
-    output signed [NB_DATA-1:0] o_data_im
+    output signed [NB_DATA-1:0] o_data_im,
+    output signed [NB_DATA-1:0] o_debug_mid_re
 );
 
 wire signed [NB_DATA-1:0] shift_r4_data0_re;
@@ -44,12 +46,21 @@ wire signed [NB_DATA-1:0] fft4_data2_re;
 wire signed [NB_DATA-1:0] fft4_data2_im;
 wire signed [NB_DATA-1:0] fft4_data3_re;
 wire signed [NB_DATA-1:0] fft4_data3_im;
-wire                      fft4_valid_re;
-wire                      fft4_valid_im;
+//wire                      fft4_valid_re;
+//wire                      fft4_valid_im;
 wire                      fft4_valid;
-wire                      fft4_ready_re;
-wire                      fft4_ready_im;
-wire                      fft4_ready;
+//wire                      fft4_ready_re;
+//wire                      fft4_ready_im;
+//wire                      fft4_ready;
+wire signed [NB_DATA-1:0] twiddle_data0_re;
+wire signed [NB_DATA-1:0] twiddle_data0_im;
+wire signed [NB_DATA-1:0] twiddle_data1_re;
+wire signed [NB_DATA-1:0] twiddle_data1_im;
+wire signed [NB_DATA-1:0] twiddle_data2_re;
+wire signed [NB_DATA-1:0] twiddle_data2_im;
+wire signed [NB_DATA-1:0] twiddle_data3_re;
+wire signed [NB_DATA-1:0] twiddle_data3_im;
+wire                      twiddle_valid;
 wire signed [NB_DATA-1:0] shift_r2_ff0_data0_re;
 wire signed [NB_DATA-1:0] shift_r2_ff0_data0_im;
 wire signed [NB_DATA-1:0] shift_r2_ff0_data1_re;
@@ -70,7 +81,7 @@ wire                      shift_r2_ff0_valid;
 wire                      shift_r2_ff1_valid;
 wire                      shift_r2_ff2_valid;
 wire                      shift_r2_ff3_valid;
-wire                      shift_r2_ffx_valid;
+//wire                      shift_r2_ffx_valid;
 wire signed [NB_DATA-1:0] mdc_ff0_data0_re;
 wire signed [NB_DATA-1:0] mdc_ff0_data0_im;
 wire signed [NB_DATA-1:0] mdc_ff0_data1_re;
@@ -93,7 +104,6 @@ wire                      mdc_ff2_valid;
 wire                      mdc_ff3_valid;
 wire                      mdc_ffx_valid;
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 shift_r4 #( .NB_DATA(8)) u_shift_r4 (
@@ -115,51 +125,67 @@ shift_r4 #( .NB_DATA(8)) u_shift_r4 (
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-fft4 #( .NB_INPUT.(8), .NBF_INPUT.(7), .NB_OUTPUT(10), .NBF_OUTPUT.(7)) u_fft4_re (
+fft4 #( .NB_INPUT(8), .NBF_INPUT(7), .NB_OUTPUT(8), .NBF_OUTPUT(7)) u_fft4 (
     .i_clk      (i_clk),
     .i_rst      (i_rst),
     .i_enable   (i_clk_en),
     .i_valid    (shift_r4_valid),
-    .i_x0       (shift_r4_data0_re),
-    .i_x1       (shift_r4_data1_re),
-    .i_x2       (shift_r4_data2_re),
-    .i_x3       (shift_r4_data3_re),
-    .o_valid    (fft4_valid_re),
-    .o_ready    (fft4_ready_re),
-    .o_x0       (fft4_data0_re),
-    .o_x1       (fft4_data1_re),
-    .o_x2       (fft4_data2_re),
-    .o_x3       (fft4_data3_re)
+    .i_inverse  (i_inverse),
+    .i_data0_re (shift_r4_data0_re),
+    .i_data0_im (shift_r4_data0_im),
+    .i_data1_re (shift_r4_data1_re),
+    .i_data1_im (shift_r4_data1_im),
+    .i_data2_re (shift_r4_data2_re),
+    .i_data2_im (shift_r4_data2_im),
+    .i_data3_re (shift_r4_data3_re),
+    .i_data3_im (shift_r4_data3_im),
+    .o_valid    (fft4_valid),
+    .o_data0_re (fft4_data0_re),
+    .o_data0_im (fft4_data0_im),
+    .o_data1_re (fft4_data1_re),
+    .o_data1_im (fft4_data1_im),
+    .o_data2_re (fft4_data2_re),
+    .o_data2_im (fft4_data2_im),
+    .o_data3_re (fft4_data3_re),
+    .o_data3_im (fft4_data3_im)
 );
 
-fft4 #( .NB_INPUT.(8), .NBF_INPUT.(7), .NB_OUTPUT(10), .NBF_OUTPUT.(7)) u_fft4_im (
+////////////////////////////////////////////////////////////////////////////////////////////
+
+twiddle_interface #( .NB_DATA(8), .NBF_DATA(7)) u_twiddle_interface (
     .i_clk      (i_clk),
     .i_rst      (i_rst),
-    .i_enable   (i_clk_en),
-    .i_valid    (shift_r4_valid),
-    .i_x0       (shift_r4_data0_im),
-    .i_x1       (shift_r4_data1_im),
-    .i_x2       (shift_r4_data2_im),
-    .i_x3       (shift_r4_data3_im),
-    .o_valid    (fft4_valid_im),
-    .o_ready    (fft4_ready_im),
-    .o_x0       (fft4_data0_im),
-    .o_x1       (fft4_data1_im),
-    .o_x2       (fft4_data2_im),
-    .o_x3       (fft4_data3_im)
+    .i_valid    (fft4_valid),
+    .i_inverse  (i_inverse),
+    .i_data0_re (fft4_data0_re),
+    .i_data0_im (fft4_data0_im),
+    .i_data1_re (fft4_data1_re),
+    .i_data1_im (fft4_data1_im),
+    .i_data2_re (fft4_data2_re),
+    .i_data2_im (fft4_data2_im),
+    .i_data3_re (fft4_data3_re),
+    .i_data3_im (fft4_data3_im),
+    .o_data0_re (twiddle_data0_re),
+    .o_data0_im (twiddle_data0_im),
+    .o_data1_re (twiddle_data1_re),
+    .o_data1_im (twiddle_data1_im),
+    .o_data2_re (twiddle_data2_re),
+    .o_data2_im (twiddle_data2_im),
+    .o_data3_re (twiddle_data3_re),
+    .o_data3_im (twiddle_data3_im),
+    .o_valid    (twiddle_valid)
 );
 
-assign fft4_valid = fft4_valid_re & fft4_valid_im;
-assign fft4_ready = fft4_ready_re & fft4_ready_im;
+assign o_debug_mid_re = twiddle_data0_re;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 shift_r2 #( .NB_DATA(8)) u_shift_r2_fft0 (
     .i_clk      (i_clk),
     .i_clk_en   (i_clk_en),
-    .i_valid    (fft4_valid),
-    .i_data_re  (fft4_data0_re),
-    .i_data_im  (fft4_data0_im),
+    .i_valid    (twiddle_valid),
+    .i_data_re  (twiddle_data0_re),
+    .i_data_im  (twiddle_data0_im),
     .o_data0_re (shift_r2_ff0_data0_re),
     .o_data0_im (shift_r2_ff0_data0_im),
     .o_data1_re (shift_r2_ff0_data1_re),
@@ -170,9 +196,9 @@ shift_r2 #( .NB_DATA(8)) u_shift_r2_fft0 (
 shift_r2 #( .NB_DATA(8)) u_shift_r2_fft1 (
     .i_clk      (i_clk),
     .i_clk_en   (i_clk_en),
-    .i_valid    (fft4_valid),
-    .i_data_re  (fft4_data1_re),
-    .i_data_im  (fft4_data1_im),
+    .i_valid    (twiddle_valid),
+    .i_data_re  (twiddle_data1_re),
+    .i_data_im  (twiddle_data1_im),
     .o_data0_re (shift_r2_ff1_data0_re),
     .o_data0_im (shift_r2_ff1_data0_im),
     .o_data1_re (shift_r2_ff1_data1_re),
@@ -183,9 +209,9 @@ shift_r2 #( .NB_DATA(8)) u_shift_r2_fft1 (
 shift_r2 #( .NB_DATA(8)) u_shift_r2_fft2 (
     .i_clk      (i_clk),
     .i_clk_en   (i_clk_en),
-    .i_valid    (fft4_valid),
-    .i_data_re  (fft4_data2_re),
-    .i_data_im  (fft4_data2_im),
+    .i_valid    (twiddle_valid),
+    .i_data_re  (twiddle_data2_re),
+    .i_data_im  (twiddle_data2_im),
     .o_data0_re (shift_r2_ff2_data0_re),
     .o_data0_im (shift_r2_ff2_data0_im),
     .o_data1_re (shift_r2_ff2_data1_re),
@@ -196,9 +222,9 @@ shift_r2 #( .NB_DATA(8)) u_shift_r2_fft2 (
 shift_r2 #( .NB_DATA(8)) u_shift_r2_fft3 (
     .i_clk      (i_clk),
     .i_clk_en   (i_clk_en),
-    .i_valid    (fft4_valid),
-    .i_data_re  (fft4_data3_re),
-    .i_data_im  (fft4_data3_im),
+    .i_valid    (twiddle_valid),
+    .i_data_re  (twiddle_data3_re),
+    .i_data_im  (twiddle_data3_im),
     .o_data0_re (shift_r2_ff3_data0_re),
     .o_data0_im (shift_r2_ff3_data0_im),
     .o_data1_re (shift_r2_ff3_data1_re),
@@ -281,6 +307,7 @@ buffer_parallel2serial #( .NB_DATA(8)) u_buffer_parallel2serial (
     .i_rst      (i_rst),
     .i_clk_en   (i_clk_en),
     .i_valid    (mdc_ffx_valid),
+    .i_tx_ready (i_tx_ready),
     .i_data0_re (mdc_ff0_data0_re),
     .i_data0_im (mdc_ff0_data0_im),
     .i_data1_re (mdc_ff0_data1_re),
@@ -297,9 +324,9 @@ buffer_parallel2serial #( .NB_DATA(8)) u_buffer_parallel2serial (
     .i_data6_im (mdc_ff3_data0_im),
     .i_data7_re (mdc_ff3_data1_re),
     .i_data7_im (mdc_ff3_data1_im),
-    .o_data_re(o_data_re),
-    .o_data_im(o_data_im),
-    .o_valid(o_valid)
+    .o_data_re  (o_data_re),
+    .o_data_im  (o_data_im),
+    .o_valid    (o_valid)
 );
 
 endmodule

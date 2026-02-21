@@ -1,0 +1,77 @@
+DESIGN_NAME: top_chip
+
+VERILOG_FILES:
+  # Top / FFT
+  - dir::design/rtl/top_fft32.v
+  - dir::design/rtl/fft32.v
+  - dir::design/rtl/fft8.v
+  - dir::design/rtl/fft4.v
+
+  # Datapath helpers
+  - dir::design/rtl/buffer_parallel2serial.v
+  - dir::design/rtl/clip_round.v
+  - dir::design/rtl/round.v
+  - dir::design/rtl/shift_r2.v
+  - dir::design/rtl/shift_r4.v
+
+  # MDC8P
+  - dir::design/rtl/fft_mdc_8p/fft_mdc_8p.v
+  - dir::design/rtl/fft_mdc_8p/ctrl_in/mdc8p_ctrl_in.v
+  - dir::design/rtl/fft_mdc_8p/ctrl_out/mdc8p_ctrl_out.v
+  - dir::design/rtl/fft_mdc_8p/stages/mdc8p_stage1.v
+  - dir::design/rtl/fft_mdc_8p/stages/mdc8p_stage2.v
+  - dir::design/rtl/fft_mdc_8p/stages/mdc8p_stage3.v
+
+  # Twiddles
+  - dir::design/rtl/twiddle_interface/twiddle_interface.v
+
+  # Common modules
+  - dir::design/rtl/common_modules/btfly_2.v
+  - dir::design/rtl/common_modules/btfly_4.v
+  - dir::design/rtl/common_modules/btfly_8.v
+  - dir::design/rtl/common_modules/complex_multiplier.v
+  - dir::design/rtl/common_modules/ds_switch.v
+  - dir::design/rtl/common_modules/rx_serializer.v
+  - dir::design/rtl/common_modules/tx_serializer.v
+  - dir::design/rtl/common_modules/xfft_cell.v
+  - dir::design/rtl/common_modules/signal_generator.v
+
+  # Debug / CDC / SPI
+  - dir::design/rtl/debug_unit/debug_system.v
+  - dir::design/rtl/debug_unit/debug_unit.v
+  #- dir::design/rtl/debug_unit/cdc_snapshot.v   
+  - dir::design/rtl/debug_unit/spi_slave_mode0.v
+
+# Clock
+CLOCK_PORT: i_clk
+CLOCK_PERIOD: 50
+
+# SDC
+PNR_SDC_FILE: dir::librelane/constraints/top.sdc
+SIGNOFF_SDC_FILE: dir::librelane/constraints/top.sdc
+
+VSRC_LOC_FILES:
+  VPWR: dir::librelane/irdrop/vpwr.csv
+  VGND: dir::librelane/irdrop/vgnd.csv
+
+
+# Floorplan
+FP_SIZING: absolute
+
+# Target utilization = 65%
+DIE_AREA: [0, 0, 880, 880]
+CORE_AREA: [20.16, 22.68, 859.84, 857.32]
+
+#75%
+# DIE_AREA:  [0, 0, 827, 827]
+# CORE_AREA: [20.16, 22.68, 806.84, 804.32]
+
+#90%
+# CORE_AREA: [20.16, 22.68, 736.88, 732.51]
+# DIE_AREA:  [0, 0, 757.04, 755.19]
+
+# ~85% target utilization 
+# CORE_AREA: [20.16, 22.68, 754.09, 749.19]
+# DIE_AREA:  [0, 0, 774.25, 771.87]
+
+

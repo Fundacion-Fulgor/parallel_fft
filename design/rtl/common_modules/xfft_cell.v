@@ -26,7 +26,7 @@ module xfft_cell #(
 //////////////////////////////////////////////////////////////
 // WIRE AND REGISTER
 //////////////////////////////////////////////////////////////
-localparam DIF_SIM = NB_O - NB_I;
+//localparam DIF_SIM = NB_O - NB_I;
 localparam NB_PROD = NB_I + NB_T;
 localparam NBF_PROD = NBF_I + NBF_T;
 localparam NB_ADDER = NB_PROD + 1;
@@ -65,7 +65,7 @@ wire                           w_st3_valid;
     reg signed  [    NB_I - 1 : 0] r_pp1_data_i;
     reg signed  [    NB_T - 1 : 0] r_pp1_tw_r;
     reg signed  [    NB_T - 1 : 0] r_pp1_tw_i;
-    reg         [           1 : 0] r_pp1_sel;
+   // reg         [           1 : 0] r_pp1_sel;
     reg                            r_pp1_valid;
 
     always @(posedge i_clk) begin

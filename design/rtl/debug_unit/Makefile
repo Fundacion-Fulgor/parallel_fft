@@ -4,6 +4,7 @@ TOPLEVEL_LANG ?= verilog
 
 # Source files
 VERILOG_SOURCES += $(PWD)/spi_slave_mode0.v
+VERILOG_SOURCES += $(PWD)/cdc_snapshot.v
 VERILOG_SOURCES += $(PWD)/debug_unit.v
 VERILOG_SOURCES += $(PWD)/top_debug_system.v
 

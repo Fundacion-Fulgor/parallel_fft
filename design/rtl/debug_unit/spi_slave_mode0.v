@@ -31,13 +31,17 @@ module spi_slave_mode0 #(
   localparam integer TXC_W    = $clog2(DATA_BITS);
   localparam integer LAST_BIT = FRAME_BITS-1;
 
+  /* verilator lint_off UNUSEDSIGNAL */
   reg [FRAME_BITS-1:0] rx_shift;
+  /* verilator lint_on UNUSEDSIGNAL */
   reg [FRAME_BITS-1:0] tx_shift;
 
   reg [CNT_W-1:0] bit_cnt;
  
+  /* verilator lint_off UNUSEDSIGNAL */
   reg rw_latched;
   reg [ADDR_BITS-1:0] addr_latched;
+  /* verilator lint_off UNUSEDSIGNAL */
 
   reg rd_toggle;
 
@@ -76,7 +80,7 @@ module spi_slave_mode0 #(
         bit_cnt  <= {CNT_W{1'b0}};
       end else begin
         
-        next_rx  = {rx_shift[FRAME_BITS-2:0], mosi};
+        next_rx  <= {rx_shift[FRAME_BITS-2:0], mosi};
         rx_shift <= next_rx;
 
         
@@ -89,7 +93,6 @@ module spi_slave_mode0 #(
             rd_toggle <= ~rd_toggle;
         end
 
-        // --- FIN DE FRAME  ---
         if (bit_cnt == LAST_BIT[CNT_W-1:0]) begin
           rx_frame <= next_rx;
 
@@ -133,7 +136,7 @@ module spi_slave_mode0 #(
           tx_active <= 1'b1;
           tx_cnt    <= {TXC_W{1'b0}}; // added line!
         end else if (tx_active) begin
-          if (tx_cnt < (DATA_BITS-1)) begin
+          if (tx_cnt < TXC_W'(DATA_BITS-1)) begin
             tx_shift <= {tx_shift[FRAME_BITS-2:0], 1'b0};
             tx_cnt   <= tx_cnt + 1'b1;
           end else begin

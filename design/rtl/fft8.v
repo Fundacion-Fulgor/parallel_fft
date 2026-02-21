@@ -14,7 +14,9 @@ module fft8 #(
     parameter NB_INPUT   = 8,
     parameter NBF_INPUT  = 7,
     parameter NB_OUTPUT  = 8,
+    /* verilator lint_off UNUSEDPARAM */
     parameter NBF_OUTPUT = 7
+    /* verilator lint_on UNUSEDPARAM */
 ) (
     input                             i_clk,
     input                             i_rst,
@@ -44,16 +46,16 @@ module fft8 #(
   localparam NB_STAGE1  = NB_INPUT + 2;
   localparam NBF_STAGE1 = NBF_INPUT;
   localparam NB_STAGE2  = NB_STAGE1 + 1;
-  localparam NBF_STAGE2 = NBF_STAGE1;
-  localparam NB_STAGE3  = NB_STAGE2 + 1;
-  localparam NBF_STAGE3 = NBF_STAGE2;
+  //localparam NBF_STAGE2 = NBF_STAGE1;
+  //localparam NB_STAGE3  = NB_STAGE2 + 1;
+  //localparam NBF_STAGE3 = NBF_STAGE2;
 
 
-  wire [ NB_INPUT - 1 : 0] w_data0_r;
-  wire [ NB_INPUT - 1 : 0] w_data0_i;
-  wire [ NB_INPUT - 1 : 0] w_data1_r;
-  wire [ NB_INPUT - 1 : 0] w_data1_i;
-  wire                     w_valid;
+ // wire [ NB_INPUT - 1 : 0] w_data0_r;
+ // wire [ NB_INPUT - 1 : 0] w_data0_i;
+ // wire [ NB_INPUT - 1 : 0] w_data1_r;
+ // wire [ NB_INPUT - 1 : 0] w_data1_i;
+ // wire                     w_valid;
   //------------------------------------------------
   wire [NB_STAGE1 - 1 : 0] w_st1_1r;
   wire [NB_STAGE1 - 1 : 0] w_st1_1i;
@@ -67,10 +69,10 @@ module fft8 #(
   wire [NB_STAGE2 - 1 : 0] w_st2_2i;
   wire                     w_st2_valid;
   //------------------------------------------------
-  wire [NB_STAGE3 - 1 : 0] w_st3_1r;
-  wire [NB_STAGE3 - 1 : 0] w_st3_1i;
-  wire [NB_STAGE3 - 1 : 0] w_st3_2r;
-  wire [NB_STAGE3 - 1 : 0] w_st3_2i;
+//  wire [NB_STAGE3 - 1 : 0] w_st3_1r;
+//  wire [NB_STAGE3 - 1 : 0] w_st3_1i;
+//  wire [NB_STAGE3 - 1 : 0] w_st3_2r;
+//  wire [NB_STAGE3 - 1 : 0] w_st3_2i;
 
 
   ///////////////////////////////////////////////////////////////////////////////
@@ -89,11 +91,11 @@ module fft8 #(
       .i_rst    (i_rst),
       .i_inverse(i_inverse),
       //----------------------------------------
-      .i_valid  (w_valid),
-      .i_data1_r(w_data0_r),
-      .i_data1_i(w_data0_i),
-      .i_data2_r(w_data1_r),
-      .i_data2_i(w_data1_i),
+      .i_valid  (i_valid),
+      .i_data1_r(i_data1_r),
+      .i_data1_i(i_data1_i),
+      .i_data2_r(i_data2_r),
+      .i_data2_i(i_data2_i),
       //----------------------------------------
       .o_valid  (w_st1_valid),
       .o_data1_r(w_st1_1r),
@@ -130,7 +132,7 @@ module fft8 #(
   // STAGE 3
   mdc8p_stage3 #(
       .NB_INPUT (NB_STAGE2),
-      .NB_OUTPUT(NB_STAGE3)
+      .NB_OUTPUT(NB_OUTPUT)
   ) u_mdc8p_stage3 (
       .i_clk    (i_clk),
       .i_inverse(i_inverse),

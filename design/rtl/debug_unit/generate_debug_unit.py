@@ -5,16 +5,24 @@ NB_DATA = 8
 
 # Format: ("signal_name", address_integer)
 PROBE_LIST = [
-    ("monitor_status", 0x00),
-    ("fifo_level",     0x01),
-    ("tap_0",          0x02),
-    ("tap_1",          0x03)
+    # General status (0x00 - 0x0F)
+    ("status_flags",   0x00), # valid and ready bits
+    ("error_flags",    0x01), # clipping bits
+    
+    # Counters (0x02 - 0x0F)
+    ("cnt_inputs",     0x02),
+    ("cnt_outputs",    0x03),
+
+    # Data (0x04 - 0x0F)
+    ("last_out_re",    0x04), # last valid real data
+    ("last_out_im",    0x05), # last valid real data
+    ("mid_data_re",    0x06)  # intermediate data (twiddle, branch 0)
 ]
 
 # Format: ("signal_name", address_integer)
 CONTROL_LIST = [
-    ("sw_reset", 0x10),
-    ("mode",     0x11)
+    # Module settings (0x10 - 0x1F)
+    ("sys_config",     0x10)  # [0]: Enable, [1]: Inverse, [2]: Soft Reset
 ]
 
 OUTPUT_FILE = "debug_unit.v"
@@ -31,6 +39,7 @@ def generate_rtl():
     verilog.append(f"  input  wire [NB_ADDR-1:0]   spi_addr,")
     verilog.append(f"  input  wire [NB_DATA-1:0]   spi_wdata,")
     verilog.append(f"  input  wire                 spi_wr_en,")
+    verilog.append(f"  input  wire                 spi_ss_n,")
     verilog.append(f"  output reg  [NB_DATA-1:0]   spi_rdata,")
     # Dynamic Ports
     ports = []
@@ -42,17 +51,15 @@ def generate_rtl():
     verilog.append(f"  // Control Outputs")
     for name, _ in CONTROL_LIST:
         ctrl_ports.append(f"  output reg  [NB_DATA-1:0]   {name}")
-    # Join control ports, careful with last comma
+    # Join control ports
     if ctrl_ports:
         verilog.append("\n".join([p + "," for p in ctrl_ports[:-1]]))
-        verilog.append(ctrl_ports[-1]) # No comma on last port
+        verilog.append(ctrl_ports[-1])
     else:
-        # If no controls, remove last comma from probes
         if verilog[-3].endswith(","):
             verilog[-3] = verilog[-3][:-1]
     verilog.append(f");")
     verilog.append(f"")
-
     # Address Map
     verilog.append(f"// Address Map")
     for name, addr in PROBE_LIST:
@@ -60,7 +67,18 @@ def generate_rtl():
     for name, addr in CONTROL_LIST:
         verilog.append(f"localparam [NB_ADDR-1:0] ADDR_{name.upper()} = 'h{addr:02X};")
     verilog.append(f"")
-
+    # CDC Synchronization
+    verilog.append(f"// CDC Synchronization (Snapshot)")
+    for name, _ in PROBE_LIST:
+        verilog.append(f"wire [NB_DATA-1:0] {name}_sync;")
+        verilog.append(f"cdc_snapshot #(.DATA_WIDTH(NB_DATA)) u_cdc_{name} (")
+        verilog.append(f"  .clk(clk),")
+        verilog.append(f"  .rst_n(rst_n),")
+        verilog.append(f"  .trigger_async_n(spi_ss_n),")
+        verilog.append(f"  .data_in({name}),")
+        verilog.append(f"  .data_out({name}_sync)")
+        verilog.append(f");")
+        verilog.append(f"")
     # Write Logic
     verilog.append(f"always @(posedge clk or negedge rst_n) begin")
     verilog.append(f"  if (!rst_n) begin")
@@ -80,9 +98,9 @@ def generate_rtl():
     # Read Logic
     verilog.append(f"always @(*) begin")
     verilog.append(f"  case (spi_addr)")
-    verilog.append(f"    // Probes")
+    verilog.append(f"    // Probes (Synchronized)")
     for name, _ in PROBE_LIST:
-        verilog.append(f"    ADDR_{name.upper()}: spi_rdata = {name};")
+        verilog.append(f"    ADDR_{name.upper()}: spi_rdata = {name}_sync;")
     verilog.append(f"    // Controls (Readback)")
     for name, _ in CONTROL_LIST:
         verilog.append(f"    ADDR_{name.upper()}: spi_rdata = {name};")
@@ -91,7 +109,6 @@ def generate_rtl():
     verilog.append(f"end")
     verilog.append(f"")
     verilog.append(f"endmodule")
-
     # Write to file
     with open(OUTPUT_FILE, "w") as f:
         f.write("\n".join(verilog))
@@ -100,20 +117,12 @@ def generate_rtl():
 
 if __name__ == "__main__":
     generate_rtl()
-    
-    print("-" * 40)
-    print("USER GUIDE:")
-    print("1. Modify PROBE_LIST array for inputs.")
-    print("2. Modify CONTROL_LIST array for outputs.")
-    print("3. Ensure addresses (hex) do not collide.")
-    print("4. Run: python3 gen_debug_unit.py")
-    print(f"5. Result: {OUTPUT_FILE} is ready.")
-    print("-" * 40)
 
 
 # Instructions:
 # 1. Modify PROBE_LIST for inputs.
 # 2. Modify CONTROL_LIST for outputs.
 # 3. Ensure addresses (hex) dont collide.
-# 4. Run the script.
-# 5. A file called OUTPUT_FILE is saved.
+# 4. Ensure cdc_snapshot.v is in the same directory.
+# 5. Run the script.
+# 6. A file called $OUTPUT_FILE is saved.

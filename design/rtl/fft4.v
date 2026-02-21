@@ -1,15 +1,14 @@
 // ----------------------------------------------------------------------------------------------------------------------------
 // Module Name: fft4.v
 // ----------------------------------------------------------------------------------------------------------------------------
-// Description:
+// Description: Cooley-Tukey 4-point FFT module. It can compute either FFT or IFFT, depending on i_inverse port value.
 //
 // ----------------------------------------------------------------------------------------------------------------------------
 // Revision History:
-//      Date:         2026-01-03
+//      Date:         2026-01-14
 //      Author:       F. Villar
 //      Organization: Fundación Fulgor
 // ----------------------------------------------------------------------------------------------------------------------------
-
 
 module fft4 #(
     parameter NB_INPUT  = 8,
@@ -17,162 +16,146 @@ module fft4 #(
     parameter NB_OUTPUT = 10,
     parameter NBF_OUTPUT = 7
 )(
-    output reg [2*NB_OUTPUT-1:0] o_x0,
-    output reg [2*NB_OUTPUT-1:0] o_x1,
-    output reg [2*NB_OUTPUT-1:0] o_x2,
-    output reg [2*NB_OUTPUT-1:0] o_x3,
-    output                       o_valid,
-    output                       o_ready,
-    input [2*NB_INPUT-1:0]       i_x0,
-    input [2*NB_INPUT-1:0]       i_x1,
-    input [2*NB_INPUT-1:0]       i_x2,
-    input [2*NB_INPUT-1:0]       i_x3,
-    input                        i_enable,
-    input                        i_valid,
-    input                        i_rst,
-    input                        i_clk
+    output reg signed [NB_OUTPUT-1:0] o_data0_re,
+    output reg signed [NB_OUTPUT-1:0] o_data0_im,
+    output reg signed [NB_OUTPUT-1:0] o_data1_re,
+    output reg signed [NB_OUTPUT-1:0] o_data1_im,
+    output reg signed [NB_OUTPUT-1:0] o_data2_re,
+    output reg signed [NB_OUTPUT-1:0] o_data2_im,
+    output reg signed [NB_OUTPUT-1:0] o_data3_re,
+    output reg signed [NB_OUTPUT-1:0] o_data3_im,
+    output                            o_valid,
+    input      signed [NB_INPUT-1:0]  i_data0_re,
+    input      signed [NB_INPUT-1:0]  i_data0_im,
+    input      signed [NB_INPUT-1:0]  i_data1_re,
+    input      signed [NB_INPUT-1:0]  i_data1_im,
+    input      signed [NB_INPUT-1:0]  i_data2_re,
+    input      signed [NB_INPUT-1:0]  i_data2_im,
+    input      signed [NB_INPUT-1:0]  i_data3_re,
+    input      signed [NB_INPUT-1:0]  i_data3_im,
+    input                             i_inverse,
+    input                             i_enable,
+    input                             i_valid,
+    input                             i_rst,
+    input                             i_clk
 );
 
-reg valid_d;
-reg valid_2d;
-reg valid_3d;
-reg valid_4d;
+reg valid_q;
+reg valid_2q;
+reg valid_3q;
+reg valid_4q;
 
-reg [2*NB_INPUT-1:0] x0;
-reg [2*NB_INPUT-1:0] x1;
-reg [2*NB_INPUT-1:0] x2;
-reg [2*NB_INPUT-1:0] x3;
+reg inv_q;
+reg inv_2q;
 
-always @(posedge i_clk) begin
-    if(i_rst) begin
-        valid_d  <= 1'b0;
-        valid_2d <= 1'b0;
-        valid_3d <= 1'b0;
-        valid_4d <= 1'b0;
-    end
-    else begin
-        valid_4d <= valid_3d;
-        valid_3d <= valid_2d;
-        valid_2d <= valid_d;
-        valid_d  <= i_valid;
-    end
-end
+reg signed [NB_INPUT-1:0] r_x0_re, r_x0_im;
+reg signed [NB_INPUT-1:0] r_x1_re, r_x1_im;
+reg signed [NB_INPUT-1:0] r_x2_re, r_x2_im;
+reg signed [NB_INPUT-1:0] r_x3_re, r_x3_im;
 
-always @(posedge i_clk) begin
-    if(i_valid) begin
-        x0 <= i_x0;
-        x1 <= i_x1;
-        x2 <= i_x2;
-        x3 <= i_x3;
-    end
-end
+reg signed [NB_INPUT:0] s1_ev_sum_re, s1_ev_sum_im;
+reg signed [NB_INPUT:0] s1_ev_sub_re, s1_ev_sub_im;
+reg signed [NB_INPUT:0] s1_od_sum_re, s1_od_sum_im;
+reg signed [NB_INPUT:0] s1_od_sub_re, s1_od_sub_im;
 
-wire signed [NB_INPUT-1:0] i_real [3:0];
-wire signed [NB_INPUT-1:0] i_imag [3:0];
+reg signed [NB_INPUT+1:0] s2_x0_re, s2_x0_im;
+reg signed [NB_INPUT+1:0] s2_x1_re, s2_x1_im;
+reg signed [NB_INPUT+1:0] s2_x2_re, s2_x2_im;
+reg signed [NB_INPUT+1:0] s2_x3_re, s2_x3_im;
 
-assign {i_real[0], i_imag[0]} = x0;
-assign {i_real[1], i_imag[1]} = x1;
-assign {i_real[2], i_imag[2]} = x2;
-assign {i_real[3], i_imag[3]} = x3;
+wire signed [NB_OUTPUT-1:0] w_out0_re, w_out0_im;
+wire signed [NB_OUTPUT-1:0] w_out1_re, w_out1_im;
+wire signed [NB_OUTPUT-1:0] w_out2_re, w_out2_im;
+wire signed [NB_OUTPUT-1:0] w_out3_re, w_out3_im;
 
-reg signed [NB_INPUT-1:0] stage1_real [3:0];
-reg signed [NB_INPUT-1:0] stage1_imag [3:0];
+assign o_valid = valid_4q;
 
 always @(posedge i_clk) begin
     if (i_rst) begin
-        stage1_real[0] <= 0;
-        stage1_real[1] <= 0;
-        stage1_real[2] <= 0;
-        stage1_real[3] <= 0;
-        stage1_imag[0] <= 0;
-        stage1_imag[1] <= 0;
-        stage1_imag[2] <= 0;
-        stage1_imag[3] <= 0;
+        valid_q  <= 1'b0;
+        valid_2q <= 1'b0;
+        valid_3q <= 1'b0;
+        valid_4q <= 1'b0;
+        inv_q    <= 1'b0;
+        inv_2q   <= 1'b0;
     end 
-    else begin
-        stage1_real[0] <= i_real[0];
-        stage1_real[1] <= i_real[1];
-        stage1_real[2] <= i_real[2];
-        stage1_real[3] <= i_real[3];
-        stage1_imag[0] <= i_imag[0];
-        stage1_imag[1] <= i_imag[1];
-        stage1_imag[2] <= i_imag[2];
-        stage1_imag[3] <= i_imag[3];
+    else if (i_enable) begin
+        valid_4q <= valid_3q;
+        valid_3q <= valid_2q;
+        valid_2q <= valid_q;
+        valid_q  <= i_valid;
+        inv_2q   <= inv_q;
+        inv_q    <= i_inverse;
     end
 end
 
-wire signed [NB_INPUT:0] X_even_real [1:0];
-wire signed [NB_INPUT:0] X_odd_real  [1:0];
-wire signed [NB_INPUT:0] X_even_imag [1:0];
-wire signed [NB_INPUT:0] X_odd_imag  [1:0];
+always @(posedge i_clk) begin
+    if (i_enable && i_valid) begin
+        r_x0_re <= i_data0_re; r_x0_im <= i_data0_im;
+        r_x1_re <= i_data1_re; r_x1_im <= i_data1_im;
+        r_x2_re <= i_data2_re; r_x2_im <= i_data2_im;
+        r_x3_re <= i_data3_re; r_x3_im <= i_data3_im;
+    end
+end
 
-assign X_even_real[0] = stage1_real[0] + stage1_real[2];
-assign X_even_real[1] = stage1_real[0] - stage1_real[2];
-assign X_even_imag[0] = stage1_imag[0] + stage1_imag[2];
-assign X_even_imag[1] = stage1_imag[0] - stage1_imag[2];
-assign X_odd_real[0]  = stage1_real[1] + stage1_real[3];
-assign X_odd_real[1]  = stage1_imag[1] - stage1_imag[3];
-assign X_odd_imag[0]  = stage1_imag[1] + stage1_imag[3];
-assign X_odd_imag[1]  = stage1_real[3] - stage1_real[1];
+always @(posedge i_clk) begin
+    if (i_enable && valid_q) begin
+        // even sums/subs (indices 0 and 2)
+        s1_ev_sum_re <= r_x0_re + r_x2_re;
+        s1_ev_sum_im <= r_x0_im + r_x2_im;
+        s1_ev_sub_re <= r_x0_re - r_x2_re;
+        s1_ev_sub_im <= r_x0_im - r_x2_im;
+        // odd sums/subs (indices 1 and 3)
+        s1_od_sum_re <= r_x1_re + r_x3_re;
+        s1_od_sum_im <= r_x1_im + r_x3_im;
+        s1_od_sub_re <= r_x1_re - r_x3_re;
+        s1_od_sub_im <= r_x1_im - r_x3_im;
+    end
+end
 
-reg signed [NB_INPUT+1:0] X_real [3:0];
-reg signed [NB_INPUT+1:0] X_imag [3:0];
+always @(posedge i_clk) begin
+    if (i_enable && valid_2q) begin
+        s2_x0_re <= s1_ev_sum_re + s1_od_sum_re;
+        s2_x0_im <= s1_ev_sum_im + s1_od_sum_im;
+        s2_x2_re <= s1_ev_sum_re - s1_od_sum_re;
+        s2_x2_im <= s1_ev_sum_im - s1_od_sum_im;
+        if (inv_2q) begin
+            s2_x1_re <= s1_ev_sub_re - s1_od_sub_im;
+            s2_x1_im <= s1_ev_sub_im + s1_od_sub_re;
+            s2_x3_re <= s1_ev_sub_re + s1_od_sub_im;
+            s2_x3_im <= s1_ev_sub_im - s1_od_sub_re;
+        end 
+        else begin
+            s2_x1_re <= s1_ev_sub_re + s1_od_sub_im; 
+            s2_x1_im <= s1_ev_sub_im - s1_od_sub_re;
+            s2_x3_re <= s1_ev_sub_re - s1_od_sub_im;
+            s2_x3_im <= s1_ev_sub_im + s1_od_sub_re;
+        end
+    end
+end
+
+clip_round #(.NB_INP(NB_INPUT + 2), .NBF_INP(NBF_INPUT), .NB_OUT(NB_OUTPUT), .NBF_OUT(NBF_OUTPUT), .RND_MD(0)) 
+u_clip0     (.i_data_re(s2_x0_re), .i_data_im(s2_x0_im), .o_data_re(w_out0_re), .o_data_im(w_out0_im));
+clip_round #(.NB_INP(NB_INPUT + 2), .NBF_INP(NBF_INPUT), .NB_OUT(NB_OUTPUT), .NBF_OUT(NBF_OUTPUT), .RND_MD(0)) 
+u_clip1     (.i_data_re(s2_x1_re), .i_data_im(s2_x1_im), .o_data_re(w_out1_re), .o_data_im(w_out1_im));
+clip_round #(.NB_INP(NB_INPUT + 2), .NBF_INP(NBF_INPUT), .NB_OUT(NB_OUTPUT), .NBF_OUT(NBF_OUTPUT), .RND_MD(0)) 
+u_clip2     (.i_data_re(s2_x2_re), .i_data_im(s2_x2_im), .o_data_re(w_out2_re), .o_data_im(w_out2_im));
+clip_round #(.NB_INP(NB_INPUT + 2), .NBF_INP(NBF_INPUT), .NB_OUT(NB_OUTPUT), .NBF_OUT(NBF_OUTPUT), .RND_MD(0)) 
+u_clip3     (.i_data_re(s2_x3_re), .i_data_im(s2_x3_im), .o_data_re(w_out3_re), .o_data_im(w_out3_im));
 
 always @(posedge i_clk) begin
     if (i_rst) begin
-        X_real[0] <= 0; X_real[1] <= 0; X_real[2] <= 0; X_real[3] <= 0;
-        X_imag[0] <= 0; X_imag[1] <= 0; X_imag[2] <= 0; X_imag[3] <= 0;
+        o_data0_re <= 0; o_data0_im <= 0;
+        o_data1_re <= 0; o_data1_im <= 0;
+        o_data2_re <= 0; o_data2_im <= 0;
+        o_data3_re <= 0; o_data3_im <= 0;
     end 
-    else begin
-        X_real[0] <= X_even_real[0] + X_odd_real[0];
-        X_real[1] <= X_even_real[1] + X_odd_real[1];
-        X_real[2] <= X_even_real[0] - X_odd_real[0];
-        X_real[3] <= X_even_real[1] - X_odd_real[1];
-        X_imag[0] <= X_even_imag[0] + X_odd_imag[0];
-        X_imag[1] <= X_even_imag[1] + X_odd_imag[1];
-        X_imag[2] <= X_even_imag[0] - X_odd_imag[0];
-        X_imag[3] <= X_even_imag[1] - X_odd_imag[1];
+    else if (i_enable && valid_3q) begin
+        o_data0_re <= w_out0_re; o_data0_im <= w_out0_im;
+        o_data1_re <= w_out1_re; o_data1_im <= w_out1_im;
+        o_data2_re <= w_out2_re; o_data2_im <= w_out2_im;
+        o_data3_re <= w_out3_re; o_data3_im <= w_out3_im;
     end
 end
-
-wire signed [NB_OUTPUT-1:0] real_adj [3:0];
-wire signed [NB_OUTPUT-1:0] imag_adj [3:0];
-
-genvar i;
-generate
-    for (i = 0; i < 4; i = i + 1) begin
-        SatTruncFP #(
-            .NB_XI(NB_INPUT + 2),
-            .NBF_XI(NBF_INPUT),
-            .NB_XO(NB_OUTPUT),
-            .NBF_XO(NBF_OUTPUT)
-        ) trunc_real (
-            .i_data(X_real[i]),
-            .o_data(real_adj[i])
-        );
-        SatTruncFP #(
-            .NB_XI(NB_INPUT + 2),
-            .NBF_XI(NBF_INPUT),
-            .NB_XO(NB_OUTPUT),
-            .NBF_XO(NBF_OUTPUT)
-        ) trunc_imag (
-            .i_data(X_imag[i]),
-            .o_data(imag_adj[i])
-        );
-    end
-endgenerate
-
-always @(posedge i_clk) begin
-    if (i_rst) begin
-        o_x0 <= 0; o_x1 <= 0; o_x2 <= 0; o_x3 <= 0;
-    end else begin
-        o_x0 <= {real_adj[0], imag_adj[0]};
-        o_x1 <= {real_adj[1], imag_adj[1]};
-        o_x2 <= {real_adj[2], imag_adj[2]};
-        o_x3 <= {real_adj[3], imag_adj[3]};
-    end
-end
-
-assign o_valid = valid_4d;
 
 endmodule
